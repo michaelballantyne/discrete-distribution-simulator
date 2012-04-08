@@ -1,4 +1,3 @@
-
 var is_int = function (value){ 
     if((parseFloat(value) == parseInt(value)) && !isNaN(value)){
         return true;
@@ -25,6 +24,7 @@ ko.numericObservable = function (initialValue) {
 var Prob = function (table) {
     this.x = ko.numericObservable();
     this.pOfX = ko.numericObservable();
+
     this.remove = function () {
         table.probs.remove(this);  
     };
@@ -40,8 +40,7 @@ var Prob = function (table) {
 
 var Table = function () {
     var self = this;
-    this.focus = ko.observable(false);
-    this.pendingProb = ko.observable(new Prob(this));
+
     this.buildFromQueryString = function () {
         var table = [];
         var query = window.location.search.substring(1);
@@ -58,7 +57,11 @@ var Table = function () {
 
         return table;
     };
+
     this.probs = ko.observableArray(this.buildFromQueryString());
+    this.pendingProb = ko.observable(new Prob(this));
+
+    this.focus = ko.observable(false);
 
     this.entryKeyHandler = function (data, e) {
         if (e.keyCode == 9) {
@@ -70,21 +73,25 @@ var Table = function () {
             return true;
         }
     };
+
     this.totalProb = function () {
         var total = 0;
-        for(var  i = 0; i < this.probs().length; i++) {
+
+        for(var i = 0; i < this.probs().length; i++) {
             total += parseFloat(this.probs()[i].pOfX());
         }
+
         return total;
     };
+
     this.totalValid = ko.dependentObservable(function () {
         return this.totalProb().toPrecision(5) == 1;
     }, this);
-
 };
 
 var Simulation = function (table, results) {
     var self = this;
+
     this.valid = function () {
         var valid = true;
         for (var i = 0; i < table.probs().length; i++) {
@@ -113,7 +120,9 @@ var Simulation = function (table, results) {
             alert("It looks like you haven't entered all the right data for the simulation. Please correct those fields highlighted in red or any you may have left empty.");
             return;
         }
+
         var dist = this.buildDist();
+
         var result = [];
         for(var j = 0; j < this.trials(); j++) {
             var rand = Math.random();
@@ -135,19 +144,20 @@ var Simulation = function (table, results) {
 };
 
 var Results = function () {
-        this.results = ko.observable('');
-        this.selectText = function () {
-            if (document.selection) {
-                var range = document.body.createTextRange();
-                range.moveToElementText(document.getElementById('selectable'));
-                range.select();
-            }
-            else if (window.getSelection) {
-                var range = document.createRange();
-                range.selectNode(document.getElementById('selectable'));
-                window.getSelection().addRange(range);
-            }
-        };
+    this.results = ko.observable('');
+
+    this.selectText = function () {
+        if (document.selection) {
+            var range = document.body.createTextRange();
+            range.moveToElementText(document.getElementById('selectable'));
+            range.select();
+        }
+        else if (window.getSelection) {
+            var range = document.createRange();
+            range.selectNode(document.getElementById('selectable'));
+            window.getSelection().addRange(range);
+        }
+    };
 };
 
 var ViewModel = function () {

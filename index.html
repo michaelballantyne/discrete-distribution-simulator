@@ -31,11 +31,9 @@
                 background-color: #66FF66;
             }
 
-            .bgred {
+            .bgred, .bgred * {
                 background-color: #CC0000;
             }
-
-
         </style>
     </head>
     <body>
@@ -44,8 +42,6 @@
             <h2>Probability Distribution</h1>
             <table data-bind="template: {name: 'probsTable'}">
             </table>
-
-            <br />
         </div>
 
         <div data-bind="with: simulation"   >
@@ -53,7 +49,6 @@
             <label>Trials: </label>
             <input data-bind="value: trials, css: {bgred: !trialsValid()}">
             <button data-bind="click: runSimulation">Run Simulation</button>
-            <br />
         </div>
 
         <div data-bind="with: results">
@@ -77,10 +72,10 @@
                 <!-- ko foreach: probs -->
                 <tr>
                     <td data-bind="css: {bgred: !(xValid())}">
-                        <input class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}" />
+                        <input class="tableinput" data-bind="value: x" />
                     </td>
                     <td data-bind=" css: {bgred: !(pValid())}">
-                        <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}" />
+                        <input class="tableinput" data-bind="value: pOfX" />
                     </td>
                     <td class="noborder">
                         <button tabindex="-1" data-bind="click: remove">X</button>
@@ -89,10 +84,10 @@
                 <!-- /ko -->
                 <tr data-bind="with: pendingProb">
                     <td data-bind="css: {bgred: !(xValid())}">
-                        <input class="tableinput" data-bind="hasfocus: $parent.focus, value: x, css: {bgred: !(xValid())}, event: {blur: $parent.entryKeyHandler}" />
+                        <input class="tableinput" data-bind="hasfocus: $parent.focus, value: x" />
                     </td>
                     <td data-bind=" css: {bgred: !(pValid())}">
-                        <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}, event: {blur: $parent.entryKeyHandler, keydown: $parent.entryKeyHandler}" />
+                        <input class="tableinput" data-bind="value: pOfX, event: {keydown: $parent.entryKeyHandler}" />
                     </td>
                 </tr>
             </tbody>
