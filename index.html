@@ -45,42 +45,7 @@
         <h1>Discrete Probability Simulator</h1>
         <div data-bind="with: table">
             <h2>Probability Distribution</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>X &#8712; &#8484;</th>
-                        <th>0 &#8804; P(X) &#8804; 1</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- ko foreach: probs -->
-                    <tr>
-                        <td data-bind="css: {bgred: !(xValid())}">
-                            <input class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}" />
-                        </td>
-                        <td data-bind=" css: {bgred: !(pValid())}">
-                            <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}" />
-                        </td>
-                        <td class="noborder">
-                            <button tabindex="-1" data-bind="click: remove">X</button>
-                        </td>
-                    </tr> 
-                    <!-- /ko -->
-                    <tr data-bind="with: pendingProb">
-                        <td data-bind="css: {bgred: !(xValid())}">
-                            <input id="focus" class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}" />
-                        </td>
-                        <td data-bind=" css: {bgred: !(pValid())}">
-                            <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}, event: {keydown: $parent.entryKeyHandler}" />
-                        </td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td class="noborder">Sum of P(X): </td>
-                        <td data-bind="css: { bggreen: totalValid(), bgred: !(totalValid())}, text: totalProb().toPrecision(5), css: { bggreen: totalValid(), bgred: !(totalValid())}"/></td>
-                    </tr>
-                </tfoot>
+            <table data-bind="template: {name: 'probsTable'}">
             </table>
 
             <br />
@@ -88,7 +53,8 @@
 
         <div data-bind="with: simulation"   >
             <h2>Simulation</h2>
-            <label>Trials: </label><input data-bind="value: trials, css: {bgred: !trialsValid}">
+            <label>Trials: </label>
+            <input data-bind="value: trials, css: {bgred: !trialsValid()}">
             <button data-bind="click: runSimulation">Run Simulation</button>
             <br />
         </div>
@@ -104,9 +70,43 @@
         </div>
 
         <script type="text/html" id="probsTable">
+            <<thead>
+                <tr>
+                    <th>X &#8712; &#8484;</th>
+                    <th>0 &#8804; P(X) &#8804; 1</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ko foreach: probs -->
+                <tr>
+                    <td data-bind="css: {bgred: !(xValid())}">
+                        <input class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}" />
+                    </td>
+                    <td data-bind=" css: {bgred: !(pValid())}">
+                        <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}" />
+                    </td>
+                    <td class="noborder">
+                        <button tabindex="-1" data-bind="click: remove">X</button>
+                    </td>
+                </tr> 
+                <!-- /ko -->
+                <tr data-bind="with: pendingProb">
+                    <td data-bind="css: {bgred: !(xValid())}">
+                        <input id="focus" class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}, event: {blur: $parent.entryKeyHandler}" />
+                    </td>
+                    <td data-bind=" css: {bgred: !(pValid())}">
+                        <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}, event: {blur: $parent.entryKeyHandler, keydown: $parent.entryKeyHandler}" />
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td class="noborder">Sum of P(X): </td>
+                    <td data-bind="css: { bggreen: totalValid(), bgred: !(totalValid())}, text: totalProb().toPrecision(5), css: { bggreen: totalValid(), bgred: !(totalValid())}"/></td>
+                </tr>
+            </tfoot>
         </script>
-        <script type="text/html" id="results">
-        </script>
+
         <script src="vm.js">
             //= vm.js
         </script>
