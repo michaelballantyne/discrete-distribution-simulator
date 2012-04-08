@@ -1,21 +1,8 @@
-function focusBottomLeftCell() {
+var focusBottomLeftCell = function () {
     $('#focus').focus();
 }
 
-function selectText() {
-    if (document.selection) {
-        var range = document.body.createTextRange();
-        range.moveToElementText(document.getElementById('selectable'));
-        range.select();
-    }
-    else if (window.getSelection) {
-        var range = document.createRange();
-        range.selectNode(document.getElementById('selectable'));
-        window.getSelection().addRange(range);
-    }
-}
-
-function is_int(value){ 
+var is_int = function (value){ 
     if((parseFloat(value) == parseInt(value)) && !isNaN(value)){
         return true;
     } else { 
@@ -23,127 +10,152 @@ function is_int(value){
     } 
 }
 
-ko.numericObservable = function(initialValue) { 
+ko.numericObservable = function (initialValue) { 
     var _actual = ko.observable(initialValue); 
+
     var result = ko.dependentObservable({ 
-        read: function() { 
+        read: function () { 
             return _actual(); 
         }, 
-        write: function(newValue) { 
+        write: function (newValue) { 
             var parsedValue = parseFloat(newValue); 
             _actual(isNaN(parsedValue) ? newValue : parsedValue); 
         } 
     }); 
+
     return result; 
 };
-var prob = function() {
-    var p = {
-        x : ko.numericObservable(),
-        pOfX : ko.numericObservable(),
-
-        remove : function() {  viewModel.probs.remove(this);  }
-    };	
-
-    p.xValid = ko.dependentObservable(function() {
-        return p.x() == null || p.x() == '' || !isNaN(p.x()) ;
-    }, viewModel);
-    p.pValid = ko.dependentObservable(function() {
-        return p.pOfX() == null || (0 <= p.pOfX() && p.pOfX() <= 1);
-    }, viewModel);
-
-    return p;
-
-}
-
-function buildTableFromQueryString() {
-    var table = [];
-    var query = window.location.search.substring(1);
-    var vars = query.split("&");
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split("=");
-        var p = new prob();
-        p.x(pair[0]);
-        p.pOfX(pair[1]);
-        table.push(p);
+var Prob = function (table) {
+    this.x = ko.numericObservable();
+    this.pOfX = ko.numericObservable();
+    this.remove = function () {
+        table.probs.remove(this);  
     }
 
-    if (table.length == 0)
-        table.push(new prob());
-    return table;
+    this.xValid = ko.dependentObservable(function () {
+        return this.x() == null || this.x() == '' || !isNaN(this.x()) ;
+    }, this);
+
+    this.pValid = ko.dependentObservable(function () {
+        return this.pOfX() == null || (0 <= this.pOfX() && this.pOfX() <= 1);
+    }, this);
 }
 
-var viewModel = {
-    probs: ko.observableArray(buildTableFromQueryString()),
-    addProb: function() {
-        this.probs.push(new prob());
-    },
-    trials: ko.numericObservable(100),
-    valid: function() {
-        var valid = true;
-        for (var i = 0; i < this.probs().length; i++) {
-            var p = this.probs()[i];
-            valid = valid && p.xValid() && p.pValid();
-        }
-
-        valid = valid && this.totalValid() && is_int(this.trials()) && this.trials() <= 10000;
-
-        return valid;
-    },
-    buildDist: function() {
-        var dist = [];
-        var runningFloor = 0.0;
-        var ps = this.probs();
-        for(var i = 0; i < ps.length; i++) {
-            var p = ps[i];
-            dist.push({floor: runningFloor, value: p.x(), ceiling: runningFloor += p.pOfX()});
-        }
-        return dist;
-    },
-    runSimulation: function() {
-        if (!this.valid()) {
-            alert("It looks like you haven't entered all the right data for the simulation. Please correct those fields highlighted in red or any you may have left empty.");
-            return;
-        }
-        var dist = this.buildDist();
-        var result = [];
-        for(var j = 0; j < this.trials(); j++) {
-            var rand = Math.random();
-            for(var i = 0; i < dist.length; i++) {
-                if (rand < dist[i].ceiling && rand >= dist[i].floor) {
-                    result.push(dist[i].value);
-                    break;
-                }
+var Table = function () {
+    var self = this;
+    this.pendingProb = ko.observable(new Prob(this));
+    this.buildFromQueryString = function () {
+        var table = [];
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        if (vars[0] !== "") {
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                var p = new Prob(this);
+                p.x(pair[0]);
+                p.pOfX(pair[1]);
+                table.push(p);
             }
         }
-        this.results(result);
-    },
-    results: ko.observable(''),
-    selectText: function() {
-        if (document.selection) {
-            var range = document.body.createTextRange();
-            range.moveToElementText(document.getElementById('selectable'));
-            range.select();
+
+        return table;
+    };
+    this.probs = ko.observableArray(this.buildFromQueryString());
+
+    this.entryKeyHandler = function (data, e) {
+        if (e.keyCode == 9) {
+            e.target.blur(); 
+            self.pendingProb(new Prob(self));
+            self.probs.push(data);
+            focusBottomLeftCell();
+        } else {
+            return true;
         }
-        else if (window.getSelection) {
-            var range = document.createRange();
-            range.selectNode(document.getElementById('selectable'));
-            window.getSelection().addRange(range);
+    };
+    this.totalProb = function () {
+        var total = 0;
+        for(var  i = 0; i < this.probs().length; i++) {
+            total += parseFloat(this.probs()[i].pOfX());
         }
-    }
+        return total;
+    };
+    this.totalValid = ko.dependentObservable(function () {
+        return this.totalProb().toPrecision(5) == 1;
+    }, this);
+
+};
+
+var Simulation = function (table, results) {
+        this.valid = function () {
+            var valid = true;
+            for (var i = 0; i < table.probs().length; i++) {
+                var p = table.probs()[i];
+                valid = valid && p.xValid() && p.pValid();
+            }
+
+            valid = valid && table.totalValid() && is_int(this.trials()) && this.trials() <= 10000;
+
+            return valid;
+        };
+
+        this.buildDist = function () {
+            var dist = [];
+            var runningFloor = 0.0;
+            var ps = table.probs();
+            for(var i = 0; i < ps.length; i++) {
+                var p = ps[i];
+                dist.push({floor: runningFloor, value: p.x(), ceiling: runningFloor += p.pOfX()});
+            }
+            return dist;
+        };
+
+        this.runSimulation = function (data, e) {
+            if (!this.valid()) {
+                alert("It looks like you haven't entered all the right data for the simulation. Please correct those fields highlighted in red or any you may have left empty.");
+                return;
+            }
+            var dist = this.buildDist();
+            var result = [];
+            for(var j = 0; j < this.trials(); j++) {
+                var rand = Math.random();
+                for(var i = 0; i < dist.length; i++) {
+                    if (rand < dist[i].ceiling && rand >= dist[i].floor) {
+                        result.push(dist[i].value);
+                        break;
+                    }
+                }
+            }
+            results.results(result);
+        };
+
+        this.trials = ko.numericObservable(100);
+
+        this.trialsValid = function () {
+            return is_int(trials()) && trials() <= 10000;
+        };
+};
+
+var Results = function () {
+        this.results = ko.observable('');
+        this.selectText = function () {
+            if (document.selection) {
+                var range = document.body.createTextRange();
+                range.moveToElementText(document.getElementById('selectable'));
+                range.select();
+            }
+            else if (window.getSelection) {
+                var range = document.createRange();
+                range.selectNode(document.getElementById('selectable'));
+                window.getSelection().addRange(range);
+            }
+        };
+};
+
+var ViewModel = function () {
+    this.table = new Table();
+    this.results = new Results();
+    this.simulation = new Simulation(this.table, this.results);
 }
 
-viewModel.totalProb = ko.dependentObservable(function() {
-    var total = 0;
-    for(var  i = 0; i < this.probs().length; i++) {
-        total += parseFloat(this.probs()[i].pOfX());
-    }
-    return total;
-}, viewModel);
 
-viewModel.totalValid =  ko.dependentObservable(function() {
-    return this.totalProb().toPrecision(5) == 1;
-}, viewModel);
-
-
-ko.applyBindings(viewModel);
-
+ko.applyBindings(new ViewModel);

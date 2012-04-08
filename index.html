@@ -1,13 +1,10 @@
 <html>
     <head>
-        <script src="libs/jquery-1.6.4.js">
-            //= libs/jquery-1.6.4.min.js 
+        <script src="libs/jquery-1.7.2.js">
+            //= libs/jquery-1.7.2.min.js 
         </script>
-        <script src="libs/jquery.tmpl.js">
-            //= libs/jquery.tmpl.min.js        
-        </script>
-        <script src="libs/knockout-1.2.1.debug.js">
-            //= libs/knockout-1.2.1.js 
+        <script src="libs/knockout-2.0.0.debug.js">
+            //= libs/knockout-2.0.0.js 
         </script>
         <style>
             table {
@@ -17,7 +14,7 @@
 
             td, th {
                 border-style: solid;
-			border-color: black;
+                border-color: black;
                 border-width: 2px;
                 padding-left: 5px;
                 padding-right: 5px
@@ -46,7 +43,7 @@
     </head>
     <body>
         <h1>Discrete Probability Simulator</h1>
-        <div>
+        <div data-bind="with: table">
             <h2>Probability Distribution</h1>
             <table>
                 <thead>
@@ -55,53 +52,60 @@
                         <th>0 &#8804; P(X) &#8804; 1</th>
                     </tr>
                 </thead>
-                <tbody data-bind="template: {name: 'probsTable', afterRender: focusBottomLeftCell}">
+                <tbody>
+                    <!-- ko foreach: probs -->
+                    <tr>
+                        <td data-bind="css: {bgred: !(xValid())}">
+                            <input class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}" />
+                        </td>
+                        <td data-bind=" css: {bgred: !(pValid())}">
+                            <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}" />
+                        </td>
+                        <td class="noborder">
+                            <button tabindex="-1" data-bind="click: remove">X</button>
+                        </td>
+                    </tr> 
+                    <!-- /ko -->
+                    <tr data-bind="with: pendingProb">
+                        <td data-bind="css: {bgred: !(xValid())}">
+                            <input id="focus" class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}" />
+                        </td>
+                        <td data-bind=" css: {bgred: !(pValid())}">
+                            <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}, event: {keydown: $parent.entryKeyHandler}" />
+                        </td>
+                    </tr>
                 </tbody>
                 <tfoot>
                     <tr>
                         <td class="noborder">Sum of P(X): </td>
-                        <td data-bind="css: { bggreen: totalValid(), bgred: !(totalValid())}, text: totalProb().toPrecision(5),css: { bggreen: totalValid(), bgred: !(totalValid())}"/></td>
+                        <td data-bind="css: { bggreen: totalValid(), bgred: !(totalValid())}, text: totalProb().toPrecision(5), css: { bggreen: totalValid(), bgred: !(totalValid())}"/></td>
                     </tr>
                 </tfoot>
             </table>
 
             <br />
-            <button data-bind="click: addProb">Add Row</button>
         </div>
 
-        <div>
+        <div data-bind="with: simulation"   >
             <h2>Simulation</h2>
-            <label>Trials: </label><input data-bind="value: trials, css: {bgred: !is_int(trials()) || trials() > 10000}">
+            <label>Trials: </label><input data-bind="value: trials, css: {bgred: !trialsValid}">
             <button data-bind="click: runSimulation">Run Simulation</button>
             <br />
-            <div data-bind="template: 'results'"></div>
         </div>
 
-        <script type="text/x-jquery-tmpl" id="probsTable">
-            {{each(i, row) probs}}
-                <tr>
-                    {{if i == probs().length - 1}}
-                        <td data-bind="css: {bgred: !(xValid())}"><input id="focus" class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}" /></td>
-                        <td data-bind=" css: {bgred: !(pValid())}"><input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}, event: {keydown: function(event) { if (event.keyCode == 9) { event.target.blur(); addProb();} else return true;} }" /></td>
-                    {{else}}
-                        <td data-bind="css: {bgred: !(xValid())}"><input class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}" /></td>
-                        <td data-bind=" css: {bgred: !(pValid())}"><input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}" /></td>
-                    {{/if}}
-                    {{if probs().length > 1}}
-                    <td class="noborder"><button tabindex="-1" data-bind="click: remove.bind(row)">X</button></td>
-                    {{/if}}
-                </tr> 
-            {{/each}}
-        </script>
-        <script type="text/x-jquery-tmpl" id="results">
-            {{if results().length > 0}}
-            <h3>Results</h3>
-            <div id="selectable" data-bind="click: selectText">
-            {{/if}}
-            {{each results}}
-            ${$value}<br />
-            {{/each}}
+        <div data-bind="with: results">
+            <div>
+                <h3>Results</h3>
+                <div id="selectable" data-bind="foreach: results, click: selectText">
+                    <span data-bind="text: $data"></span> 
+                    <br />
+                </div>
+            </div>
         </div>
+
+        <script type="text/html" id="probsTable">
+        </script>
+        <script type="text/html" id="results">
         </script>
         <script src="vm.js">
             //= vm.js
