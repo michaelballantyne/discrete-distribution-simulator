@@ -1,6 +1,3 @@
-var focusBottomLeftCell = function () {
-    $('#focus').focus();
-}
 
 var is_int = function (value){ 
     if((parseFloat(value) == parseInt(value)) && !isNaN(value)){
@@ -30,7 +27,7 @@ var Prob = function (table) {
     this.pOfX = ko.numericObservable();
     this.remove = function () {
         table.probs.remove(this);  
-    }
+    };
 
     this.xValid = ko.dependentObservable(function () {
         return this.x() == null || this.x() == '' || !isNaN(this.x()) ;
@@ -43,6 +40,7 @@ var Prob = function (table) {
 
 var Table = function () {
     var self = this;
+    this.focus = ko.observable(false);
     this.pendingProb = ko.observable(new Prob(this));
     this.buildFromQueryString = function () {
         var table = [];
@@ -67,7 +65,7 @@ var Table = function () {
             e.target.blur(); 
             self.pendingProb(new Prob(self));
             self.probs.push(data);
-            focusBottomLeftCell();
+            self.focus(true);
         } else {
             return true;
         }

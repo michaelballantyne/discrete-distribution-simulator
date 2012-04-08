@@ -1,8 +1,5 @@
 <html>
     <head>
-        <script src="libs/jquery-1.7.2.js">
-            //= libs/jquery-1.7.2.min.js 
-        </script>
         <script src="libs/knockout-2.0.0.debug.js">
             //= libs/knockout-2.0.0.js 
         </script>
@@ -70,7 +67,7 @@
         </div>
 
         <script type="text/html" id="probsTable">
-            <<thead>
+            <thead>
                 <tr>
                     <th>X &#8712; &#8484;</th>
                     <th>0 &#8804; P(X) &#8804; 1</th>
@@ -92,7 +89,7 @@
                 <!-- /ko -->
                 <tr data-bind="with: pendingProb">
                     <td data-bind="css: {bgred: !(xValid())}">
-                        <input id="focus" class="tableinput" data-bind="value: x, css: {bgred: !(xValid())}, event: {blur: $parent.entryKeyHandler}" />
+                        <input class="tableinput" data-bind="hasfocus: $parent.focus, value: x, css: {bgred: !(xValid())}, event: {blur: $parent.entryKeyHandler}" />
                     </td>
                     <td data-bind=" css: {bgred: !(pValid())}">
                         <input class="tableinput" data-bind="value: pOfX, css: {bgred: !(pValid())}, event: {blur: $parent.entryKeyHandler, keydown: $parent.entryKeyHandler}" />
